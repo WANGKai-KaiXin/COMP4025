@@ -42,47 +42,114 @@
         document.addEventListener('mousemove', onDocumentMouseMove, false);
 
         camera.position.y = 200;
-        camera.position.z = 250;
+        camera.position.z = 100;
         controls = new THREE.TrackballControls(camera);
 
         //create the balls container
         //back
         var geometry = new THREE.CubeGeometry(200, 200, 4);
-        var material = new THREE.MeshBasicMaterial({color: 0xFFFF,});
+        var material = new THREE.MeshBasicMaterial({ color: 0xFFFF, });
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(0, -200, -100)
         scene.add(cube);
         //left
         var geometry = new THREE.CubeGeometry(4, 200, 200);
-        var material = new THREE.MeshBasicMaterial({color: 0xFF,});
+        var material = new THREE.MeshBasicMaterial({ color: 0xFF, });
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(-100, -200, 0)
         scene.add(cube);
         //right
         var geometry = new THREE.CubeGeometry(4, 200, 200);
-        var material = new THREE.MeshBasicMaterial({color: 0xFFF00,});
+        var material = new THREE.MeshBasicMaterial({ color: 0xFFF00, });
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(100, -200, 0)
         scene.add(cube);
         //front
         var geometry = new THREE.CubeGeometry(200, 200, 4);
-        var material = new THREE.MeshBasicMaterial({color: 0xFF0000,});
+        var material = new THREE.MeshBasicMaterial({ color: 0xFF0000, });
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(0, -200, 100)
         scene.add(cube);
         //bottom
         var geometry = new THREE.CubeGeometry(200, 4, 200);
-        var material = new THREE.MeshBasicMaterial({color: 'white',});
+        var material = new THREE.MeshBasicMaterial({ color: 'white', });
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(0, -300, 0)
         scene.add(cube);
+        //score text
+        var textarea = document.createElement('div');
+        textarea.id = 'textarea1';
+        textarea.style.position = 'absolute';
+        textarea.style.top = '20%';
+        textarea.style.left = '20%';
+        textarea.style.color = 'white';
+        textarea.style.fontFamily = '標楷體';
+        textarea.style.fontSize = '2.5rem';
+        textarea.style.transform = 'translate(-50%, -50%)';
+        document.body.appendChild(textarea);
+        var score = 0;
+        //Next ball text
+        var textarea = document.createElement('div');
+        textarea.id = 'textarea2';
+        textarea.style.position = 'absolute';
+        textarea.style.top = '20%';
+        textarea.style.left = '60%';
+        textarea.style.color = 'white';
+        textarea.style.fontFamily = '標楷體';
+        textarea.style.fontSize = '2.5rem';
+        textarea.style.transform = 'translate(-50%, -50%)';
+        document.body.appendChild(textarea);
+
+        //ball
+        var geometry = new THREE.SphereGeometry(20, 32, 32);
+        var texLoader = new THREE.TextureLoader();
+        var texture = texLoader.load("textures/gold_ball.jpg");
+        var material = new THREE.MeshBasicMaterial({
+            shininess: 100,
+            color: 0xFFFF00,
+            map: texture
+        });
+        var ball = new THREE.Mesh(geometry, material);
+        ball.position.set(0, 0, 0)
+        scene.add(ball);
+
+        //control the ball moving
+        var z_speed = 0;
+        function onDocumentKeyDown(event) {
+            var delta = 10;
+            event = event || window.event;
+            var keycode = event.keyCode;
+            switch (keycode) {
+                case 37: //left arrow 向左箭头
+                    ball.position.x = ball.position.x - delta;
+                    break;
+                case 38: // up arrow 向上箭头
+                    ball.position.z = ball.position.z - delta;
+                    break;
+                case 39: // right arrow 向右箭头
+                    ball.position.x = ball.position.x + delta;
+                    break;
+                case 40: //down arrow向下箭头
+                    ball.position.z = ball.position.z + delta;
+                    break;
+                case 32: //spze
+                    z_speed = 5;
+                    break;
+            }
+        }
 
         var render = function () {
             requestAnimationFrame(render);
             raycaster = new THREE.Raycaster();
             var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
             raycaster.set(camera.position, vector.sub(camera.position).normalize());
+            document.addEventListener('keydown', onDocumentKeyDown, false);
+            if (ball.position.y > -300) {
+                ball.position.y = ball.position.y - z_speed;
+            }
             controls.update();
+            document.getElementById('textarea1').innerHTML = 'Score: ' + score;
+            document.getElementById('textarea2').innerHTML = 'Next Ball: ';
             renderer.render(scene, camera);
         };
         render();
