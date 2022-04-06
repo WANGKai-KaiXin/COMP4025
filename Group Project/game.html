@@ -109,8 +109,6 @@
             ball.position.set(0, 0, 0);
             return ball;
         }
-        // ball = createBall("gold");
-        // scene.add(ball);
         //set the next ball
         var nextBall;
         var nextBallName;
@@ -130,7 +128,6 @@
                 nextBallName = "gold";
             }
             nextBall = createBall(nextBallName);
-            console.log("next ball runs");
         }
         createNextBall();
         var currentBall;
@@ -142,10 +139,8 @@
                 scene.add(currentBall);
             }
         }
-
         //store used balls
         var balls = new Array();
-
         //control the ball moving
         var z_speed = 0;
         function onDocumentKeyDown(event) {
@@ -155,16 +150,24 @@
             if (currentBall != null) {
                 switch (keycode) {
                     case 37: //left arrow
-                        currentBall.position.x = currentBall.position.x - delta;
+                        if (currentBall.position.x > -80) {
+                            currentBall.position.x = currentBall.position.x - delta;
+                        }
                         break;
                     case 38: // up arrow
-                        currentBall.position.z = currentBall.position.z - delta;
+                        if (currentBall.position.z > -80) {
+                            currentBall.position.z = currentBall.position.z - delta;
+                        }
                         break;
                     case 39: // right arrow
-                        currentBall.position.x = currentBall.position.x + delta;
+                        if (currentBall.position.x < 80) {
+                            currentBall.position.x = currentBall.position.x + delta;
+                        }
                         break;
                     case 40: //down arrow
-                        currentBall.position.z = currentBall.position.z + delta;
+                        if (currentBall.position.z < 80) {
+                            currentBall.position.z = currentBall.position.z + delta;
+                        }
                         break;
                     case 32: //space
                         z_speed = 5;
@@ -183,6 +186,7 @@
                 currentBall.position.y = currentBall.position.y - z_speed;
             } else {
                 z_speed = 0;
+                balls.push(currentBall);
                 currentBall = null;
             }
             controls.update();
