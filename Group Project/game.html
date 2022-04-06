@@ -93,25 +93,58 @@
         textarea.id = 'textarea2';
         textarea.style.position = 'absolute';
         textarea.style.top = '20%';
-        textarea.style.left = '60%';
+        textarea.style.left = '75%';
         textarea.style.color = 'white';
         textarea.style.fontFamily = '標楷體';
         textarea.style.fontSize = '2.5rem';
         textarea.style.transform = 'translate(-50%, -50%)';
         document.body.appendChild(textarea);
+        //craete a new ball with its color
+        function createBall(color) {
+            var geometry = new THREE.SphereGeometry(20, 20, 20);
+            var texLoader = new THREE.TextureLoader();
+            var texture = texLoader.load("textures/" + color + "_ball.jpg");
+            var material = new THREE.MeshBasicMaterial({ map: texture });
+            var ball = new THREE.Mesh(geometry, material);
+            ball.position.set(0, 0, 0);
+            return ball;
+        }
+        // ball = createBall("gold");
+        // scene.add(ball);
+        //set the next ball
+        var nextBall;
+        var nextBallName;
+        function createNextBall() {
+            var number = Math.random() * 126;
+            if (number < 64) {
+                nextBallName = "white";
+            } else if (number < 96) {
+                nextBallName = "green";
+            } else if (number < 112) {
+                nextBallName = "blue";
+            } else if (number < 120) {
+                nextBallName = "orange";
+            } else if (number < 124) {
+                nextBallName = "red";
+            } else {
+                nextBallName = "gold";
+            }
+            nextBall = createBall(nextBallName);
+            console.log("next ball runs");
+        }
+        createNextBall();
+        var currentBall;
+        //set the current ball
+        function checkCurrentBall() {
+            if (currentBall == null) {
+                currentBall = nextBall;
+                createNextBall();
+                scene.add(currentBall);
+            }
+        }
 
-        //ball
-        var geometry = new THREE.SphereGeometry(20, 32, 32);
-        var texLoader = new THREE.TextureLoader();
-        var texture = texLoader.load("textures/gold_ball.jpg");
-        var material = new THREE.MeshBasicMaterial({
-            shininess: 100,
-            color: 0xFFFF00,
-            map: texture
-        });
-        var ball = new THREE.Mesh(geometry, material);
-        ball.position.set(0, 0, 0)
-        scene.add(ball);
+        //store used balls
+        var balls = new Array();
 
         //control the ball moving
         var z_speed = 0;
@@ -119,37 +152,42 @@
             var delta = 10;
             event = event || window.event;
             var keycode = event.keyCode;
-            switch (keycode) {
-                case 37: //left arrow 向左箭头
-                    ball.position.x = ball.position.x - delta;
-                    break;
-                case 38: // up arrow 向上箭头
-                    ball.position.z = ball.position.z - delta;
-                    break;
-                case 39: // right arrow 向右箭头
-                    ball.position.x = ball.position.x + delta;
-                    break;
-                case 40: //down arrow向下箭头
-                    ball.position.z = ball.position.z + delta;
-                    break;
-                case 32: //spze
-                    z_speed = 5;
-                    break;
+            if (currentBall != null) {
+                switch (keycode) {
+                    case 37: //left arrow
+                        currentBall.position.x = currentBall.position.x - delta;
+                        break;
+                    case 38: // up arrow
+                        currentBall.position.z = currentBall.position.z - delta;
+                        break;
+                    case 39: // right arrow
+                        currentBall.position.x = currentBall.position.x + delta;
+                        break;
+                    case 40: //down arrow
+                        currentBall.position.z = currentBall.position.z + delta;
+                        break;
+                    case 32: //space
+                        z_speed = 5;
+                        break;
+                }
             }
         }
-
         var render = function () {
             requestAnimationFrame(render);
             raycaster = new THREE.Raycaster();
             var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
             raycaster.set(camera.position, vector.sub(camera.position).normalize());
             document.addEventListener('keydown', onDocumentKeyDown, false);
-            if (ball.position.y > -300) {
-                ball.position.y = ball.position.y - z_speed;
+            checkCurrentBall();
+            if (currentBall.position.y > -300) {
+                currentBall.position.y = currentBall.position.y - z_speed;
+            } else {
+                z_speed = 0;
+                currentBall = null;
             }
             controls.update();
             document.getElementById('textarea1').innerHTML = 'Score: ' + score;
-            document.getElementById('textarea2').innerHTML = 'Next Ball: ';
+            document.getElementById('textarea2').innerHTML = 'Next Ball: ' + nextBallName;
             renderer.render(scene, camera);
         };
         render();
