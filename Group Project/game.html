@@ -65,11 +65,11 @@
         cube.position.set(100, -200, 0)
         scene.add(cube);
         //front
-        // var geometry = new THREE.CubeGeometry(200, 200, 4);
-        // var material = new THREE.MeshBasicMaterial({ color: 0xFF0000, });
-        // var cube = new THREE.Mesh(geometry, material);
-        // cube.position.set(0, -200, 100)
-        // scene.add(cube);
+        var geometry = new THREE.CubeGeometry(200, 200, 4);
+        var material = new THREE.MeshBasicMaterial({ color: 0xFF0000, });
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.set(0, -200, 100)
+        scene.add(cube);
         //bottom
         var geometry = new THREE.CubeGeometry(200, 4, 200);
         var material = new THREE.MeshBasicMaterial({ color: 'white', });
@@ -99,6 +99,9 @@
         textarea.style.fontSize = '2.5rem';
         textarea.style.transform = 'translate(-50%, -50%)';
         document.body.appendChild(textarea);
+        //store used balls
+        var balls = new Array();
+        var ballsColor = new Array();
         //craete a new ball with its color
         function createBall(color) {
             var geometry = new THREE.SphereGeometry(20, 20, 20);
@@ -107,6 +110,7 @@
             var material = new THREE.MeshBasicMaterial({ map: texture });
             var ball = new THREE.Mesh(geometry, material);
             ball.position.set(0, 0, 0);
+            ballsColor.push(color);
             return ball;
         }
         //set the next ball
@@ -137,10 +141,9 @@
                 currentBall = nextBall;
                 createNextBall();
                 scene.add(currentBall);
+                console.log(ballsColor);
             }
         }
-        //store used balls
-        var balls = new Array();
         //control the ball moving
         var z_speed = 0;
         function onDocumentKeyDown(event) {
@@ -185,7 +188,7 @@
                 }
             }
             //check if the ball touchs the bottom
-            if (currentBall.position.y >= -265) {
+            if (currentBall.position.y >= -275) {
                 return false;
             }
             // return false;
@@ -193,7 +196,7 @@
         //check if the game is over
         function checkGameOver() {
             for (var i = 0; i < balls.length; i++) {
-                if(balls[i].position.y>=-100){
+                if (balls[i].position.y >= -100) {
                     return true;
                 }
             }
@@ -207,7 +210,6 @@
             if (checkGameOver() == false) {
                 document.addEventListener('keydown', onDocumentKeyDown, false);
                 checkCurrentBall();
-                // if (currentBall.position.y > -280) {
                 if (checkCollision() == false) {
                     currentBall.position.y = currentBall.position.y - z_speed;
                 } else {
