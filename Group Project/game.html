@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>The Rotating Can</title>
+    <title>Fusion Ball</title>
     <style>
         html,
         body {
@@ -45,7 +45,7 @@
         camera.position.z = 100;
         controls = new THREE.TrackballControls(camera);
 
-        //create the balls container
+        /*Use five cuboids as containers for the balls*/
         //back
         var geometry = new THREE.CubeGeometry(200, 200, 4);
         var material = new THREE.MeshBasicMaterial({ color: 0xFFFF, });
@@ -65,11 +65,11 @@
         cube.position.set(100, -200, 0)
         scene.add(cube);
         //front
-        var geometry = new THREE.CubeGeometry(200, 200, 4);
-        var material = new THREE.MeshBasicMaterial({ color: 0xFF0000, });
-        var cube = new THREE.Mesh(geometry, material);
-        cube.position.set(0, -200, 100)
-        scene.add(cube);
+        // var geometry = new THREE.CubeGeometry(200, 200, 4);
+        // var material = new THREE.MeshBasicMaterial({ color: 0xFF0000, });
+        // var cube = new THREE.Mesh(geometry, material);
+        // cube.position.set(0, -200, 100)
+        // scene.add(cube);
         //bottom
         var geometry = new THREE.CubeGeometry(200, 4, 200);
         var material = new THREE.MeshBasicMaterial({ color: 'white', });
@@ -99,18 +99,47 @@
         textarea.style.fontSize = '2.5rem';
         textarea.style.transform = 'translate(-50%, -50%)';
         document.body.appendChild(textarea);
+        //End game text
+        var textarea = document.createElement('div');
+        textarea.id = 'textareaEndgame';
+        textarea.style.position = 'absolute';
+        textarea.style.borderRadius = '25px';
+        textarea.style.top = '50%';
+        textarea.style.left = '50%';
+        textarea.style.color = 'white';
+        textarea.style.backgroundColor = 'skyblue';
+        textarea.style.fontFamily = '標楷體';
+        textarea.style.fontSize = '3.5rem';
+        textarea.style.transform = 'translate(-50%, -50%)';
+        document.body.appendChild(textarea);
+        //End game btn
+        var button = document.createElement('button');
+        button.id = 'buttonEndgame';
+        button.style.position = 'absolute';
+        button.style.borderRadius = '25px';
+        button.style.top = '70%';
+        button.style.left = '50%';
+        button.style.color = 'black';
+        button.style.backgroundColor = 'pink';
+        button.style.fontFamily = '標楷體';
+        button.style.fontStyle = 'bold';
+        button.style.fontSize = '1.5rem';
+        button.style.transform = 'translate(-50%, -50%)';
+        button.hidden = true;
+        button.onclick = function () {
+            location.reload();
+        };
+        document.body.appendChild(button);
         //store used balls
         var balls = new Array();
-        var ballsColor = new Array();
         //craete a new ball with its color
         function createBall(color) {
             var geometry = new THREE.SphereGeometry(20, 20, 20);
             var texLoader = new THREE.TextureLoader();
             var texture = texLoader.load("textures/" + color + "_ball.jpg");
-            var material = new THREE.MeshBasicMaterial({ map: texture });
+            var material = new THREE.MeshBasicMaterial({ map: texture, name: color });
             var ball = new THREE.Mesh(geometry, material);
             ball.position.set(0, 0, 0);
-            ballsColor.push(color);
             return ball;
         }
         //set the next ball
@@ -141,16 +170,17 @@
                 currentBall = nextBall;
                 createNextBall();
                 scene.add(currentBall);
-                console.log(ballsColor);
             }
         }
         //control the ball moving
+        var x_speed = 0;
+        var y_speed = 0;
         var z_speed = 0;
         function onDocumentKeyDown(event) {
-            var delta = 10;
+            var delta = 40;
             event = event || window.event;
             var keycode = event.keyCode;
-            if (currentBall != null) {
+            if (currentBall != null && z_speed == 0) {
                 switch (keycode) {
                     case 37: //left arrow
                         if (currentBall.position.x > -80) {
@@ -178,12 +208,50 @@
                 }
             }
         }
+        //move the balls
+        function moveBalls() {
+            currentBall.position.y = currentBall.position.y - z_speed;
+        }
+        //record if it merges
+        var isMerged = false;
         //check if they have collision
         function checkCollision() {
-            //Check if balls in a line collide
+            //Check if balls have collision
             for (var i = 0; i < balls.length; i++) {
                 var distance = (balls[i].position.x - currentBall.position.x) ** 2 + (balls[i].position.y - currentBall.position.y) ** 2 + (balls[i].position.z - currentBall.position.z) ** 2
-                if (distance <= 1600) {
+                //in a line(same x and z)
+                if (distance <= 1600 && balls[i].position.x == currentBall.position.x && balls[i].position.z == currentBall.position.z) {
+                    if (balls[i].material.name == currentBall.material.name && balls[i].material.name != "gold") {
+                        var color;
+                        switch (balls[i].material.name) {
+                            case "white":
+                                color = "green";
+                                break;
+                            case "green":
+                                color = "blue";
+                                break;
+                            case "blue":
+                                color = "orange";
+                                break;
+                            case "orange":
+                                color = "red";
+                                break;
+                            case "red":
+                                color = "gold";
+                                break;
+                        }
+                        var geometry = new THREE.SphereGeometry(20, 20, 20);
+                        var texLoader = new THREE.TextureLoader();
+                        var texture = texLoader.load("textures/" + color + "_ball.jpg");
+                        var material = new THREE.MeshBasicMaterial({ map: texture, name: color });
+                        var ball = new THREE.Mesh(geometry, material);
+                        ball.position.set(balls[i].position.x, balls[i].position.y, balls[i].position.z);
+                        scene.add(ball);
+                        scene.remove(balls[i]);
+                        balls.splice(i, 1);
+                        balls.push(ball);
+                        isMerged = true;
+                    }
                     return true;
                 }
             }
@@ -193,7 +261,56 @@
             }
             // return false;
         }
-        //check if the game is over
+        //check the existing balls have same color or not
+        // function checkExistingBallColor() {
+        //     for (var i = 0; i < balls.length - 1; i++) {
+        //         for (var j = i + 1; j < balls.length; j++) {
+        //             var distance = (balls[i].position.x - balls[j].position.x) ** 2 + (balls[i].position.y - balls[j].position.y) ** 2 + (balls[i].position.z - balls[j].position.z) ** 2;
+        //             if (distance <= 1600 && balls[i].material.name != "gold" && balls[i].material.name == balls[j].material.name && balls[i].position.x == balls[j].position.x && balls[i].position.z == balls[j].position.z) {
+        //                 var color;
+        //                 switch (balls[j].material.name) {
+        //                     case "white":
+        //                         color = "green";
+        //                         break;
+        //                     case "green":
+        //                         color = "blue";
+        //                         break;
+        //                     case "blue":
+        //                         color = "orange";
+        //                         break;
+        //                     case "orange":
+        //                         color = "red";
+        //                         break;
+        //                     case "red":
+        //                         color = "gold";
+        //                         break;
+        //                 }
+        //                 var geometry = new THREE.SphereGeometry(20, 20, 20);
+        //                 var texLoader = new THREE.TextureLoader();
+        //                 var texture = texLoader.load("textures/" + color + "_ball.jpg");
+        //                 var material = new THREE.MeshBasicMaterial({ map: texture, name: color });
+        //                 var ball = new THREE.Mesh(geometry, material);
+        //                 var y = 0;
+        //                 if (balls[i].position.y > balls[j].position.y) {
+        //                     y = balls[j].position.y;
+        //                 } else {
+        //                     y = balls[i].position.y;
+        //                 }
+        //                 ball.position.set(balls[i].position.x, y, balls[i].position.z);
+        //                 scene.add(ball);
+        //                 for (var k = 0; k < balls.length; k++) {
+        //                     console.log(balls[k].material.name);
+        //                 }
+        //                 scene.remove(balls[i]);
+        //                 scene.remove(balls[j]);
+        //                 balls.splice(i, 1);
+        //                 balls.splice(j, 1);
+        //                 balls.push(ball);
+        //             }
+        //         }
+        //     }
+        // }
+        // // //check if the game is over
         function checkGameOver() {
             for (var i = 0; i < balls.length; i++) {
                 if (balls[i].position.y >= -100) {
@@ -202,24 +319,63 @@
             }
             return false;
         }
+        //count score
+        function countScore() {
+            var count = 0;
+            for (var i = 0; i < balls.length; i++) {
+                switch (balls[i].material.name) {
+                    case "white":
+                        count += 2;
+                        break;
+                    case "green":
+                        count += 5;
+                        break;
+                    case "blue":
+                        count += 12;
+                        break;
+                    case "orange":
+                        count += 28;
+                        break;
+                    case "red":
+                        count += 64;
+                        break;
+                    case "gold":
+                        count += 144;
+                        break;
+                }
+            }
+            score = count;
+        }
         var render = function () {
             requestAnimationFrame(render);
             raycaster = new THREE.Raycaster();
             var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
             raycaster.set(camera.position, vector.sub(camera.position).normalize());
             if (checkGameOver() == false) {
+                countScore();
                 document.addEventListener('keydown', onDocumentKeyDown, false);
                 checkCurrentBall();
                 if (checkCollision() == false) {
-                    currentBall.position.y = currentBall.position.y - z_speed;
+                    moveBalls()
                 } else {
                     z_speed = 0;
-                    balls.push(currentBall);
+                    if (isMerged == false) {
+                        balls.push(currentBall);
+                    } else {
+                        scene.remove(currentBall);
+                        isMerged = false;
+                    }
                     currentBall = null;
                 }
                 controls.update();
                 document.getElementById('textarea1').innerHTML = 'Score: ' + score;
                 document.getElementById('textarea2').innerHTML = 'Next Ball: ' + nextBallName;
+            } else {
+                document.getElementById('textareaEndgame').style.padding = '15px';
+                document.getElementById('textareaEndgame').innerHTML = 'End game!\nYour score:' + score;
+                button.hidden = false;
+                document.getElementById('buttonEndgame').style.border = 'dashed white 3px';
+                document.getElementById('buttonEndgame').innerHTML = "Try again";
             }
             renderer.render(scene, camera);
         };
